@@ -16,6 +16,9 @@ contract("Voting", accounts => {
     VotingInstance = await Voting.new({ from: _owner });
   });
 
+  // TODO : add tests for each function of changing status on every steps
+  // TODO : same for add voter, addProposal and setVote
+
   ///////////////////////////////
   // registering voters status //
   ///////////////////////////////
@@ -71,12 +74,15 @@ contract("Voting", accounts => {
 
   it("...should add proposals and emit events", async () => {
     let currentProposalId = 1;
+    // proposal #1
     let transaction = await VotingInstance.addProposal("frites à la cantine", { from: _owner });
-    expectEvent(transaction, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+    expectEvent(transaction, "ProposalRegistered", { proposalId: BN(currentProposalId++) });
+    // proposal #2
     let transaction1 = await VotingInstance.addProposal("bière à la cantine", { from: _user1 });
-    expectEvent(transaction1, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+    expectEvent(transaction1, "ProposalRegistered", { proposalId: BN(currentProposalId++) });
+    // proposal #3
     let transaction2 = await VotingInstance.addProposal("homard à la cantine", { from: _user2 });
-    expectEvent(transaction2, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+    expectEvent(transaction2, "ProposalRegistered", { proposalId: BN(currentProposalId++) });
   });
 
   it("...should not add proposal if empty description", async () => {
@@ -87,13 +93,80 @@ contract("Voting", accounts => {
     await expectRevert(VotingInstance.addProposal("", { from: _user3 }), "You're not a voter");
   });
 
+  it("...should get a proposal informations", async () => {
+    let proposal = await VotingInstance.getOneProposal(1, { from: _owner });
+    expect(proposal.description).to.be.equal("frites à la cantine");
+    expect(proposal.voteCount).to.be.bignumber.equal(BN(0));
+  });
+
+  it("...should not be possible to get a proposal informations if not a voter", async () => {
+    await expectRevert(VotingInstance.getOneProposal(1, { from: _user3 }), "You're not a voter");
+  });
+
   /////////////////////////////////////////
   // proposals registration ended status //
   /////////////////////////////////////////
 
+  it("...should not be possible to end proposals registering if not the owner", async () => {
+    await expectRevert(VotingInstance.endProposalsRegistering({ from: _user1 }), "Ownable: caller is not the owner");
+  });
+
+  it("...should end proposals registering and emit an event", async () => {
+    let transaction = await VotingInstance.endProposalsRegistering({ from: _owner });
+    expectEvent(transaction, "WorkflowStatusChange", { previousStatus: BN(1), newStatus: BN(2) });
+  });
+
+  it("...should not be possible to end proposals registering if already set", async () => {
+    await expectRevert(VotingInstance.endProposalsRegistering({ from: _owner }), "Registering proposals havent started yet");
+  });
+
   ///////////////////////////////////
   // voting session started status //
   ///////////////////////////////////
+
+  it("...should not be possible to start voting session if not the owner", async () => {
+    await expectRevert(VotingInstance.startVotingSession({ from: _user1 }), "Ownable: caller is not the owner");
+  });
+
+  it("...should start voting session and emit an event", async () => {
+    let transaction = await VotingInstance.startVotingSession({ from: _owner });
+    expectEvent(transaction, "WorkflowStatusChange", { previousStatus: BN(2), newStatus: BN(3) });
+  });
+
+  it("...should not be possible to start voting session if already set", async () => {
+    await expectRevert(VotingInstance.startVotingSession({ from: _owner }), "Registering proposals phase is not finished");
+  });
+
+  it("...should not be possible set vote for a non existing proposal", async () => {
+    await expectRevert(VotingInstance.setVote(20, { from: _owner }), "Proposal not found");
+  });
+
+  it("...should set votes and emit events", async () => {
+    let transaction = await VotingInstance.setVote(2, { from: _owner });
+    expectEvent(transaction, "Voted", { voter: _owner, proposalId: BN(2) });
+    let transaction1 = await VotingInstance.setVote(2, { from: _user1 });
+    expectEvent(transaction1, "Voted", { voter: _user1, proposalId: BN(2) });
+    let transaction2 = await VotingInstance.setVote(1, { from: _user2 });
+    expectEvent(transaction2, "Voted", { voter: _user2, proposalId: BN(1) });
+  });
+
+  it("...should have updated proposal informations", async () => {
+    let proposal = await VotingInstance.getOneProposal(2, { from: _owner });
+    expect(proposal.voteCount).to.be.bignumber.equal(BN(2));
+  });
+
+  it("...should not be possible to set vote if already voted", async () => {
+    await expectRevert(VotingInstance.setVote(2, { from: _owner }), "You have already voted");
+  });
+
+  it("...should not be possible to set vote if not a voter", async () => {
+    await expectRevert(VotingInstance.setVote(1, { from: _user3 }), "You're not a voter");
+  });
+
+  it("...should get a voter voted proposal id", async () => {
+    let voter = await VotingInstance.getVoter(_owner, { from: _user2 });
+    expect(voter.votedProposalId).to.be.bignumber.equal(BN(2));
+  });
 
   /////////////////////////////////
   // voting session ended status //
