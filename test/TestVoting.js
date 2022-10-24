@@ -69,6 +69,24 @@ contract("Voting", accounts => {
     await expectRevert(VotingInstance.addVoter(_user3, { from: _owner }), "Voters registration is not open yet");
   });
 
+  it("...should add proposals and emit events", async () => {
+    let currentProposalId = 1;
+    let transaction = await VotingInstance.addProposal("frites à la cantine", { from: _owner });
+    expectEvent(transaction, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+    let transaction1 = await VotingInstance.addProposal("bière à la cantine", { from: _user1 });
+    expectEvent(transaction1, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+    let transaction2 = await VotingInstance.addProposal("homard à la cantine", { from: _user2 });
+    expectEvent(transaction2, "ProposalRegistered", { proposalId: BN(currentProposalId++)});
+  });
+
+  it("...should not add proposal if empty description", async () => {
+    await expectRevert(VotingInstance.addProposal("", { from: _owner }), "Vous ne pouvez pas ne rien proposer");
+  });
+
+  it("...should not add proposal if not a voter", async () => {
+    await expectRevert(VotingInstance.addProposal("", { from: _user3 }), "You're not a voter");
+  });
+
   /////////////////////////////////////////
   // proposals registration ended status //
   /////////////////////////////////////////
