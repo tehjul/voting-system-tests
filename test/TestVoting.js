@@ -1,7 +1,6 @@
 const Voting = artifacts.require("Voting");
 const { BN, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
-const { assert } = require('console');
 
 contract("Voting", accounts => {
 
@@ -10,10 +9,6 @@ contract("Voting", accounts => {
   let _user2 = accounts[2];
 
   let VotingInstance;
-
-  it("...should deploy the contract", async () => {
-    VotingInstance = await Voting.new({ from: _owner });
-  });
 
   describe('\n:::::::::: GETTERS ::::::::::\n', function () {
 
