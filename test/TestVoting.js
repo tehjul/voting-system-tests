@@ -18,44 +18,98 @@ contract("Voting", accounts => {
 
   // TODO : add tests for each function of changing status on every steps
   // TODO : same for add voter, addProposal and setVote
+  // TODO : add .call() after each getter
 
-  ///////////////////////////////
-  // registering voters status //
-  ///////////////////////////////
+  //////////////
+  // getVoter //
+  //////////////
 
-  it("...should add a new voters and emit events", async () => {
-    let transaction = await VotingInstance.addVoter(_owner, { from: _owner });
-    expectEvent(transaction, "VoterRegistered", { voterAddress: _owner });
-    let transaction1 = await VotingInstance.addVoter(_user1, { from: _owner });
-    expectEvent(transaction1, "VoterRegistered", { voterAddress: _user1 });
-    let transaction2 = await VotingInstance.addVoter(_user2, { from: _owner });
-    expectEvent(transaction2, "VoterRegistered", { voterAddress: _user2 });
+  describe('getVoter function', function () {
+
+    beforeEach(async function () {
+      VotingInstance = await Voting.new({ from: _owner });
+      await VotingInstance.addVoter(_owner, { from: _owner });
+    })
+
+    it("...should get a voter informations", async () => {
+      let voter = await VotingInstance.getVoter(_owner, { from: _owner });
+      expect(voter.isRegistered).to.be.true;
+      expect(voter.hasVoted).to.be.false;
+      expect(voter.votedProposalId).to.be.bignumber.equal(BN(0));
+    });
+
+    it("...should revert if not a voter", async () => {
+      await expectRevert(VotingInstance.getVoter(_owner, { from: _user3 }), "You're not a voter");
+    });
+
   });
 
-  it("...should not add a new voter if not the owner", async () => {
-    await expectRevert(VotingInstance.addVoter(_user1, { from: _user1 }), "Ownable: caller is not the owner");
+  ////////////////////
+  // getOneProposal //
+  ////////////////////
+
+  describe('getOneProposal function', function () {
+
+    beforeEach(async function () {
+      VotingInstance = await Voting.new({ from: _owner });
+      await VotingInstance.addVoter(_owner, { from: _owner });
+      await VotingInstance.startProposalsRegistering({ from: _owner });
+      await VotingInstance.addProposal("frites à la cantine", { from: _owner });
+    })
+
+    it("...should get a proposal informations", async () => {
+      let proposal = await VotingInstance.getOneProposal(1, { from: _owner });
+      expect(proposal.description).to.be.equal("frites à la cantine");
+      expect(proposal.voteCount).to.be.bignumber.equal(BN(0));
+    });
+
+    it("...should revert if not a voter", async () => {
+      await expectRevert(VotingInstance.getOneProposal(1, { from: _user3 }), "You're not a voter");
+    });
+
   });
 
-  it("...should not be possible to register the same voter", async () => {
-    await expectRevert(VotingInstance.addVoter(_owner, { from: _owner }), "Already registered");
+  //////////////
+  // addVoter //
+  //////////////
+
+  describe('addVoter function', function () {
+
+    beforeEach(async function () {
+      VotingInstance = await Voting.new({ from: _owner });
+      await VotingInstance.addVoter(_owner, { from: _owner });
+    })
+
+    it("...should add a new voter", async () => {
+      let voter = await VotingInstance.getVoter(_user1, { from: _owner });
+      expect(voter.isRegistered).to.be.false;
+      await VotingInstance.addVoter(_user1, { from: _owner });
+      voter = await VotingInstance.getVoter(_user1, { from: _owner });
+      expect(voter.isRegistered).to.be.true;
+    });
+
+    it("...should emit an event", async () => {
+      let transaction = await VotingInstance.addVoter(_user1, { from: _owner });
+      expectEvent(transaction, "VoterRegistered", { voterAddress: _user1 });
+    });
+
+    it("...should revert if not the owner", async () => {
+      await expectRevert(VotingInstance.addVoter(_user1, { from: _user1 }), "Ownable: caller is not the owner");
+    });
+
+    it("...should revert if adding twice the same voter", async () => {
+      await VotingInstance.addVoter(_user1, { from: _owner });
+      await expectRevert(VotingInstance.addVoter(_user1, { from: _owner }), "Already registered");
+    });
+
+    it("...should revert if current status is not RegisteringVoters", async () => {
+      await VotingInstance.startProposalsRegistering({ from: _owner });
+      await expectRevert(VotingInstance.addVoter(_user3, { from: _owner }), "Voters registration is not open yet");
+    });
+
   });
 
-  it("...should get a voter informations", async () => {
-    let voter = await VotingInstance.getVoter(_owner, { from: _owner });
-    expect(voter.isRegistered).to.be.true;
-    expect(voter.hasVoted).to.be.false;
-    expect(voter.votedProposalId).to.be.bignumber.equal(BN(0));
-  });
-
-  it("...should not be possible to get a voter informations if not a voter", async () => {
-    await expectRevert(VotingInstance.getVoter(_owner, { from: _user3 }), "You're not a voter");
-  });
-
-  ///////////////////////////////////////////
-  // proposals registration started status //
-  ///////////////////////////////////////////
-
-  it("...should not be possible to start proposals registering if not the owner", async () => {
+/*   it("...should not be possible to start proposals registering if not the owner", async () => {
     await expectRevert(VotingInstance.startProposalsRegistering({ from: _user1 }), "Ownable: caller is not the owner");
   });
 
@@ -66,10 +120,6 @@ contract("Voting", accounts => {
 
   it("...should not be possible to start proposals registering if already set", async () => {
     await expectRevert(VotingInstance.startProposalsRegistering({ from: _owner }), "Registering proposals cant be started now");
-  });
-
-  it("...should not be possible to register a new voter when proposals registration is started", async () => {
-    await expectRevert(VotingInstance.addVoter(_user3, { from: _owner }), "Voters registration is not open yet");
   });
 
   it("...should add proposals and emit events", async () => {
@@ -91,16 +141,6 @@ contract("Voting", accounts => {
 
   it("...should not add proposal if not a voter", async () => {
     await expectRevert(VotingInstance.addProposal("", { from: _user3 }), "You're not a voter");
-  });
-
-  it("...should get a proposal informations", async () => {
-    let proposal = await VotingInstance.getOneProposal(1, { from: _owner });
-    expect(proposal.description).to.be.equal("frites à la cantine");
-    expect(proposal.voteCount).to.be.bignumber.equal(BN(0));
-  });
-
-  it("...should not be possible to get a proposal informations if not a voter", async () => {
-    await expectRevert(VotingInstance.getOneProposal(1, { from: _user3 }), "You're not a voter");
   });
 
   /////////////////////////////////////////
@@ -166,14 +206,6 @@ contract("Voting", accounts => {
   it("...should get a voter voted proposal id", async () => {
     let voter = await VotingInstance.getVoter(_owner, { from: _user2 });
     expect(voter.votedProposalId).to.be.bignumber.equal(BN(2));
-  });
-
-  /////////////////////////////////
-  // voting session ended status //
-  /////////////////////////////////
-
-  //////////////////////////
-  // votes tallied status //
-  //////////////////////////
+  }); */
 
 });
