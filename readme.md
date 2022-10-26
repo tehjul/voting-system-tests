@@ -29,7 +29,7 @@ npm install @openzeppelin/test-helpers
 ganache
 ```
 
-2. Compile the smart contract
+2. Compile and deploy the smart contract
 ```
 truffle migrate
 ```
