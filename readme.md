@@ -6,7 +6,8 @@
 
 Smart contract developed by [Cyril CASTAGNET](https://github.com/lecascyril)
 
-# Getting started
+# ***Getting started***
+
 ## Dependencies
 
 - NodeJS
@@ -39,7 +40,8 @@ truffle migrate
 truffle test
 ```
 
-# Voting system unit tests project
+# ***Voting system unit tests project***
+
 Pour réaliser les tests, j'ai choisi classer les tests à l'aide de **describe** dans des sections qui reprennent la même structure que le smart contract :
 
 ### PUBLIC VARIABLES
