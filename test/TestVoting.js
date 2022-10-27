@@ -10,6 +10,36 @@ contract("Voting", accounts => {
 
   let VotingInstance;
 
+  describe('\n:::::::::: PUBLIC VARIABLES ::::::::::\n', function () {
+
+    describe('winningProposalID', function () {
+
+      beforeEach(async function () {
+        VotingInstance = await Voting.new({ from: _owner });
+      });
+
+      it("...should get the variable value", async () => {
+        let value = await VotingInstance.winningProposalID.call();
+        expect(value).to.be.bignumber.equal(BN(0));
+      });
+
+    });
+
+    describe('workflowStatus', function () {
+
+      beforeEach(async function () {
+        VotingInstance = await Voting.new({ from: _owner });
+      });
+
+      it("...should get the variable value", async () => {
+        let value = await VotingInstance.workflowStatus.call();
+        expect(value).to.be.bignumber.equal(BN(0));
+      });
+
+    });
+
+  });
+
   describe('\n:::::::::: GETTERS ::::::::::\n', function () {
 
     //////////////
@@ -21,7 +51,7 @@ contract("Voting", accounts => {
       beforeEach(async function () {
         VotingInstance = await Voting.new({ from: _owner });
         await VotingInstance.addVoter(_owner, { from: _owner });
-      })
+      });
 
       // ::::: modifier ::::: //
       it("...should revert if not a voter", async () => {
@@ -230,7 +260,7 @@ contract("Voting", accounts => {
     const VotingSessionStartedId = 3;
     const VotingSessionEndedId = 4;
     const VotesTalliedId = 5;
-  
+
     ///////////////////////////////
     // startProposalsRegistering //
     ///////////////////////////////
