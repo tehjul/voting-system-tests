@@ -2,11 +2,10 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-%339933.svg?style=for-the-badge&logo=nodedotjs&logoColor=black)
 
-
 ![https://github.com/tehjul](https://img.shields.io/badge/Compiler-0.8.13-blue?style=plastic)
 
-# Voting system unit tests project
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer fringilla orci quis sapien luctus, ut pharetra erat luctus. Nullam eu posuere ipsum, posuere porta ante. Vivamus in tortor ut urna posuere iaculis id vel mi. Nam euismod nec turpis quis sollicitudin. Ut imperdiet nibh urna, at sodales metus luctus vitae. Sed sed quam ut massa euismod sodales. Pellentesque urna urna, efficitur vitae mattis et, auctor nec lorem. Phasellus porta efficitur nulla, ut mollis diam interdum sed. Nullam odio neque, sagittis ac nunc vitae, ultrices pharetra lorem. Cras quam sem, pharetra sit amet felis eget, rhoncus viverra magna. Mauris molestie, ex ac varius iaculis, ex orci auctor quam, vitae auctor elit sapien sit amet nisl. Donec fringilla erat ipsum, vel hendrerit metus fringilla sodales. Curabitur in nibh hendrerit, elementum augue vitae, dictum nisi. Quisque commodo sapien a neque malesuada porttitor.
+Smart contract developed by [Cyril CASTAGNET](https://github.com/lecascyril)
+
 # Getting started
 ## Dependencies
 
@@ -17,9 +16,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer fringilla orci 
 ```
 npm install -g truffle
 ```
-2. Test Helpers
+2. Install packages
 ```
-npm install @openzeppelin/test-helpers
+npm install
 ```
 
 ## Launch tests
@@ -37,4 +36,70 @@ truffle migrate
 3. Run tests
 ```
 truffle test
+```
+
+# Voting system unit tests project
+Pour réaliser les tests, j'ai choisi classer les tests à l'aide de **describe** dans des sections qui reprennent la même structure que le smart contract :
+***
+:::::::::: GETTERS ::::::::::
+
+- getVoter
+- getOneProposal
+***
+:::::::::: REGISTRATION ::::::::::
+
+- addVoter
+***
+:::::::::: PROPOSAL ::::::::::
+
+- addProposal
+***
+:::::::::: VOTE ::::::::::
+
+- setVote
+***
+:::::::::: STATE ::::::::::
+
+- startProposalsRegistering
+- endProposalsRegistering
+- startVotingSession
+- endVotingSession
+- tallyVotes
+***
+\
+Pour chaque méthode, je teste le ou les **modifier**, puis les **require** un par un, ensuite le coeur de la **fonction** qui peut effectuer une ou plusieurs actions, et pour finir les éventuels **event**.
+\
+Des commentaires ont été ajoutés devant chaque bloc de test afin de se repérer plus facilement.
+
+***
+\
+Enfin j'ai ajouté le package **eth-gas-reporter** afin d'avoir un apercu du cout en gas du déploiement et de chaque fonctions. J'ai ajouté quelques options afin de visualiser le cout en dollar, mais je les ai volontairement commentées car cela nécéssite une clé API.
+```bash
+·------------------------------------------|----------------------------|-------------|----------------------------·
+|   Solc version: 0.8.13+commit.abaa5c0e   ·  Optimizer enabled: false  ·  Runs: 200  ·  Block limit: 6718946 gas  │
+···········································|····························|·············|·····························
+|  Methods                                 ·               14 gwei/gas                ·      1548.23 usd/eth       │
+·············|·····························|··············|·············|·············|··············|··············
+|  Contract  ·  Method                     ·  Min         ·  Max        ·  Avg        ·  # calls     ·  usd (avg)  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  addProposal                ·           -  ·          -  ·      59208  ·          20  ·       1.28  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  addVoter                   ·           -  ·          -  ·      50220  ·          47  ·       1.09  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  endProposalsRegistering    ·           -  ·          -  ·      30599  ·          29  ·       0.66  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  endVotingSession           ·           -  ·          -  ·      30533  ·          14  ·       0.66  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  setVote                    ·           -  ·          -  ·      78013  ·          13  ·       1.69  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  startProposalsRegistering  ·           -  ·          -  ·      94840  ·          44  ·       2.06  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  startVotingSession         ·           -  ·          -  ·      30554  ·          25  ·       0.66  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Voting    ·  tallyVotes                 ·           -  ·          -  ·      60661  ·           7  ·       1.31  │
+·············|·····························|··············|·············|·············|··············|··············
+|  Deployments                             ·                                          ·  % of limit  ·             │
+···········································|··············|·············|·············|··············|··············
+|  Voting                                  ·           -  ·          -  ·    1970027  ·      29.3 %  ·      42.70  │
+·------------------------------------------|--------------|-------------|-------------|--------------|-------------·
 ```

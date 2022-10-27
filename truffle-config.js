@@ -1,3 +1,6 @@
+// require('dotenv').config();
+// const { COINMARKETCAP_API } = process.env;
+
 module.exports = {
 
   networks: {
@@ -9,6 +12,13 @@ module.exports = {
   },
 
   mocha: {
+    reporter: 'eth-gas-reporter',
+    // reporterOptions: {
+    //   currency: 'USD',
+    //   coinmarketcap: COINMARKETCAP_API,
+    //   token: 'ETH',
+    //   gasPriceApi: 'https://api.etherscan.io/api?module=proxy&action=eth_gasPrice'
+    // }
   },
 
   compilers: {
